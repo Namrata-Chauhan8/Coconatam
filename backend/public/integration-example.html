@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coconutam API Integration Example</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      .section {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .product-card {
+        border: 1px solid #eee;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+      }
+      .cart-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .error {
+        color: red;
+        background: #ffe6e6;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+      .success {
+        color: green;
+        background: #e6ffe6;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Coconutam API Integration Example</h1>
+
+    <div class="container">
+      <!-- Products Section -->
+      <div class="section">
+        <h2>Products</h2>
+        <button onclick="loadProducts()">Load Products</button>
+        <div id="products"></div>
+      </div>
+
+      <!-- Cart Section -->
+      <div class="section">
+        <h2>Shopping Cart</h2>
+        <button onclick="loadCart()">Load Cart</button>
+        <button onclick="clearCart()">Clear Cart</button>
+        <div id="cart"></div>
+        <div id="cart-total"></div>
+      </div>
+    </div>
+
+    <!-- Payment Section -->
+    <div class="section" style="margin-top: 20px">
+      <h2>Payment Integration</h2>
+      <button onclick="createOrder()">Create Order</button>
+      <div id="payment-status"></div>
+    </div>
+
+    <script>
+      const API_BASE_URL = "http://localhost:5000/api";
+      const userId = "user123"; // In real app, this would come from authentication
+
+      // Utility function for API calls
+      async function apiCall(endpoint, options = {}) {
+        try {
+          const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: {
+              "Content-Type": "application/json",
+              "user-id": userId,
+              ...options.headers,
+            },
+            ...options,
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || "API call failed");
+          }
+
+          return data;
+        } catch (error) {
+          console.error("API Error:", error);
+          throw error;
+        }
+      }
+
+      // Load and display products
+      async function loadProducts() {
+        try {
+          const response = await apiCall("/products");
+          const productsContainer = document.getElementById("products");
+
+          productsContainer.innerHTML = response.data.products
+            .map(
+              (product) => `
+                    <div class="product-card">
+                        <h3>${product.name}</h3>
+                        <p>${product.description}</p>
+                        <p><strong>Price:</strong> ₹${product.price}</p>
+                        <p><strong>Stock:</strong> ${product.stock}</p>
+                        <p><strong>Category:</strong> ${product.category}</p>
+                        <button onclick="addToCart('${product._id}', ${product.price})">
+                            Add to Cart
+                        </button>
+                    </div>
+                `
+            )
+            .join("");
+
+          showMessage("Products loaded successfully!", "success");
+        } catch (error) {
+          showMessage(`Error loading products: ${error.message}`, "error");
+        }
+      }
+
+      // Add item to cart
+      async function addToCart(productId, price) {
+        try {
+          await apiCall("/cart/add", {
+            method: "POST",
+            body: JSON.stringify({
+              productId: productId,
+              quantity: 1,
+            }),
+          });
+
+          showMessage("Item added to cart!", "success");
+          loadCart(); // Refresh cart display
+        } catch (error) {
+          showMessage(`Error adding to cart: ${error.message}`, "error");
+        }
+      }
+
+      // Load and display cart
+      async function loadCart() {
+        try {
+          const response = await apiCall("/cart");
+          const cartContainer = document.getElementById("cart");
+          const cartTotalContainer = document.getElementById("cart-total");
+
+          if (response.data.cart.items.length === 0) {
+            cartContainer.innerHTML = "<p>Cart is empty</p>";
+            cartTotalContainer.innerHTML = "";
+            return;
+          }
+
+          cartContainer.innerHTML = response.data.cart.items
+            .map(
+              (item) => `
+                    <div class="cart-item">
+                        <div>
+                            <strong>${item.product.name}</strong>
+                            <br>
+                            Quantity: ${item.quantity} × ₹${item.price}
+                        </div>
+                        <div>
+                            <button onclick="updateCartItem('${
+                              item.product._id
+                            }', ${item.quantity - 1})">-</button>
+                            <span>${item.quantity}</span>
+                            <button onclick="updateCartItem('${
+                              item.product._id
+                            }', ${item.quantity + 1})">+</button>
+                            <button onclick="removeFromCart('${
+                              item.product._id
+                            }')">Remove</button>
+                        </div>
+                    </div>
+                `
+            )
+            .join("");
+
+          cartTotalContainer.innerHTML = `
+                    <h3>Total: ₹${response.data.cart.total}</h3>
+                `;
+        } catch (error) {
+          showMessage(`Error loading cart: ${error.message}`, "error");
+        }
+      }
+
+      // Update cart item quantity
+      async function updateCartItem(productId, quantity) {
+        try {
+          await apiCall(`/cart/update/${productId}`, {
+            method: "PUT",
+            body: JSON.stringify({ quantity }),
+          });
+
+          loadCart(); // Refresh cart display
+        } catch (error) {
+          showMessage(`Error updating cart: ${error.message}`, "error");
+        }
+      }
+
+      // Remove item from cart
+      async function removeFromCart(productId) {
+        try {
+          await apiCall(`/cart/remove/${productId}`, {
+            method: "DELETE",
+          });
+
+          showMessage("Item removed from cart!", "success");
+          loadCart(); // Refresh cart display
+        } catch (error) {
+          showMessage(`Error removing from cart: ${error.message}`, "error");
+        }
+      }
+
+      // Clear cart
+      async function clearCart() {
+        try {
+          await apiCall("/cart/clear", {
+            method: "DELETE",
+          });
+
+          showMessage("Cart cleared!", "success");
+          loadCart(); // Refresh cart display
+        } catch (error) {
+          showMessage(`Error clearing cart: ${error.message}`, "error");
+        }
+      }
+
+      // Create order (simplified example)
+      async function createOrder() {
+        try {
+          // First get cart
+          const cartResponse = await apiCall("/cart");
+
+          if (cartResponse.data.cart.items.length === 0) {
+            showMessage("Cart is empty!", "error");
+            return;
+          }
+
+          // Create order
+          const orderResponse = await apiCall("/payments/create-order", {
+            method: "POST",
+            body: JSON.stringify({
+              cartId: cartResponse.data.cart._id,
+              shippingAddress: {
+                name: "John Doe",
+                phone: "9876543210",
+                address: "123 Main Street",
+                city: "Mumbai",
+                state: "Maharashtra",
+                pincode: "400001",
+                country: "India",
+              },
+            }),
+          });
+
+          const paymentStatusContainer =
+            document.getElementById("payment-status");
+          paymentStatusContainer.innerHTML = `
+                    <div class="success">
+                        <h3>Order Created Successfully!</h3>
+                        <p><strong>Order ID:</strong> ${orderResponse.data.order.orderId}</p>
+                        <p><strong>Total Amount:</strong> ₹${orderResponse.data.order.total}</p>
+                        <p><strong>Razorpay Order ID:</strong> ${orderResponse.data.razorpayOrder.id}</p>
+                        <p>In a real application, you would now redirect to Razorpay payment page.</p>
+                    </div>
+                `;
+
+          showMessage("Order created successfully!", "success");
+        } catch (error) {
+          showMessage(`Error creating order: ${error.message}`, "error");
+        }
+      }
+
+      // Utility function to show messages
+      function showMessage(message, type) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className = type;
+        messageDiv.textContent = message;
+        document.body.insertBefore(messageDiv, document.body.firstChild);
+
+        // Remove message after 3 seconds
+        setTimeout(() => {
+          messageDiv.remove();
+        }, 3000);
+      }
+
+      // Load products on page load
+      window.onload = function () {
+        loadProducts();
+        loadCart();
+      };
+    </script>
+  </body>
+</html>

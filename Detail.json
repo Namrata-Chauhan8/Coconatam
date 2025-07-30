@@ -1,0 +1,52 @@
+[
+    {
+        "name": "Hanging Planter",
+        "size": "2.5 cm diameter",
+        "description": "Elegant handmade earrings crafted from preserved flowers, sealed in clear resin. Perfect for gifting your loved ones.",
+        "price": 499,
+        "currency": "INR",
+        "stock": 20,
+        "images": "https://example.com/images/earring1.jpg",
+        "availability": "In Stock"
+    },
+    {
+        "name": "Coconut Shell Handel Tea Cup",
+        "size": "2.5 cm diameter",
+        "description": "Elegant handmade earrings crafted from preserved flowers, sealed in clear resin. Perfect for gifting your loved ones.",
+        "price": 499,
+        "currency": "INR",
+        "stock": 20,
+        "images": "https://example.com/images/earring1.jpg",
+        "availability": "In Stock"
+    },
+    {
+        "name": "Fragrant Fusion",
+        "size": "2.5 cm diameter",
+        "description": "Elegant handmade earrings crafted from preserved flowers, sealed in clear resin. Perfect for gifting your loved ones.",
+        "price": 499,
+        "currency": "INR",
+        "stock": 20,
+        "images": "https://example.com/images/earring1.jpg",
+        "availability": "In Stock"
+    },
+    {
+        "name": "Pen Holder",
+        "size": "2.5 cm diameter",
+        "description": "Elegant handmade earrings crafted from preserved flowers, sealed in clear resin. Perfect for gifting your loved ones.",
+        "price": 499,
+        "currency": "INR",
+        "stock": 20,
+        "images": "https://example.com/images/earring1.jpg",
+        "availability": "In Stock"
+    },
+    {
+        "name": "Coconut shell candle",
+        "size": "2.5 cm diameter",
+        "description": "Elegant handmade earrings crafted from preserved flowers, sealed in clear resin. Perfect for gifting your loved ones.",
+        "price": 499,
+        "currency": "INR",
+        "stock": 20,
+        "images": "https://example.com/images/earring1.jpg",
+        "availability": "In Stock"
+    }
+]
