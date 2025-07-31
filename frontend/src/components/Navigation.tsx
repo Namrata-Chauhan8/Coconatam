@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import { messages } from "@/constants/messages";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 export default function Navigation({
   title,
@@ -19,6 +19,9 @@ export default function Navigation({
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const router = useRouter();
+  const pathname = usePathname();
+
+  const isActive = (href: string) => pathname === href;
 
   useEffect(() => {
     // Check localStorage for token/user on mount
@@ -38,7 +41,12 @@ export default function Navigation({
   return (
     <>
       <nav className="custom-navbar navbar navbar-expand-md navbar-dark bg-dark">
-        <div className="container">
+        <div
+          className="container"
+          style={{
+            zIndex: 1000,
+          }}
+        >
           {/* <Link className="navbar-brand" href="/">
             <Image
               src="/images/white-transparent-logo.svg"
@@ -62,22 +70,24 @@ export default function Navigation({
             id="navbarsFurni"
           >
             <ul className="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
-              <li className="nav-item active">
+              <li className={`nav-item${isActive("/") ? " active" : ""}`}>
                 <Link className="nav-link" href="/">
                   Home
                 </Link>
               </li>
-              <li>
+              <li className={`nav-item${isActive("/shop") ? " active" : ""}`}>
                 <Link className="nav-link" href="/shop">
                   Shop
                 </Link>
               </li>
-              <li>
+              <li className={`nav-item${isActive("/about") ? " active" : ""}`}>
                 <Link className="nav-link" href="/about">
                   About us
                 </Link>
               </li>
-              <li>
+              <li
+                className={`nav-item${isActive("/contact") ? " active" : ""}`}
+              >
                 <Link className="nav-link" href="/contact">
                   Contact us
                 </Link>
